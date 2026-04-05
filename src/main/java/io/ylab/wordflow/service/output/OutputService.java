@@ -53,12 +53,9 @@ public class OutputService {
 
     private void outputToConsole(ResponseDto response) {
 
-//        System.out.println("\nDirectory: " + response.infoDto().directory());
-//        System.out.println("Min length: " + response.infoDto().minWordLength());
-//        System.out.println("Top count: " + response.infoDto().top());
         System.out.printf("\nMode: %s (%d workers)\n", response.infoDto().mode().toUpperCase(), response.infoDto().threads());
         System.out.printf("Processed %d files in %d ms\n", response.infoDto().processedFiles(), response.infoDto().executionTimeMs());
-        System.out.printf("\nTop %d words (min length = %d):\n", response.infoDto().top(), response.infoDto().minWordLength());
+        System.out.printf("Top %d words (min length = %d):\n", response.infoDto().top(), response.infoDto().minWordLength());
         System.out.println("\nTop words: [");
         if (!response.words().isEmpty()){
             int i = 1;
