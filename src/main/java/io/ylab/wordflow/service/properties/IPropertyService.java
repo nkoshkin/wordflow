@@ -20,13 +20,15 @@ public interface IPropertyService {
         return getRequaredValue(param, Function.identity());
     }
 
-    default Integer getInt(String param){
-        return getValue(param, 0, Integer::parseInt);
+    default Integer getInt(String param, Integer defaultValue){
+        return getValue(param, defaultValue, Integer::parseInt);
     }
 
     default Integer getRequiredInt(String param){
         return getRequaredValue(param, Integer::parseInt);
     }
+
+    <T extends Enum<T>> T getEnum(String param, T defaultValue, Class<T> enumClass);
 
     Boolean hasParam(String param);
 

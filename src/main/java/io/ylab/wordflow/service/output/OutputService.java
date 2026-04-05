@@ -24,15 +24,15 @@ public class OutputService {
     public void returnResponse(ResponseDto response, String outputFile){
         if (outputFile == null || outputFile.isBlank()){
             logger.info("Print result to console");
-            printToConsole(response);
+            outputToConsole(response);
         }
         else {
             logger.info("Save result to file: {}", outputFile);
-            saveToFile(response, outputFile);
+            outputToFile(response, outputFile);
         }
     }
 
-    private void saveToFile(ResponseDto response, String outputFile) {
+    private void outputToFile(ResponseDto response, String outputFile) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
@@ -46,16 +46,19 @@ public class OutputService {
         } catch (IOException e) {
             logger.error("Failed to save FILE: {}", e.getMessage());
             logger.info("Output redirect to console");
-            printToConsole(response);
+            outputToConsole(response);
         }
 
     }
 
-    private void printToConsole(ResponseDto response) {
+    private void outputToConsole(ResponseDto response) {
 
-        System.out.println("\nDirectory: " + response.infoDto().directory());
-        System.out.println("Min length: " + response.infoDto().minWordLength());
-        System.out.println("Top count: " + response.infoDto().top());
+//        System.out.println("\nDirectory: " + response.infoDto().directory());
+//        System.out.println("Min length: " + response.infoDto().minWordLength());
+//        System.out.println("Top count: " + response.infoDto().top());
+        System.out.printf("\nMode: %s (%d workers)\n", response.infoDto().mode().toUpperCase(), response.infoDto().threads());
+        System.out.printf("Processed %d files in %d ms\n", response.infoDto().processedFiles(), response.infoDto().executionTimeMs());
+        System.out.printf("\nTop %d words (min length = %d):\n", response.infoDto().top(), response.infoDto().minWordLength());
         System.out.println("\nTop words: [");
         if (!response.words().isEmpty()){
             int i = 1;

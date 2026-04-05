@@ -22,6 +22,15 @@ public class CliPropertyServiceImpl implements IPropertyService {
     }
 
     @Override
+    public <T extends Enum<T>> T getEnum(String param, T defaultValue, Class<T> enumClass) {
+        String value = getString(param, null);
+        if (value == null || value.isBlank()){
+            return defaultValue;
+        }
+        return Enum.valueOf(enumClass, value.toUpperCase());
+    }
+
+    @Override
     public Boolean hasParam(String param) {
         return args.containsOption(param);
     }

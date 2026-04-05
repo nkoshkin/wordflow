@@ -1,6 +1,7 @@
 package io.ylab.wordflow.service.analysis.impl;
 
 import io.ylab.wordflow.dto.*;
+import io.ylab.wordflow.processor.FileProcessor;
 import io.ylab.wordflow.service.analysis.ITextAnalysis;
 import io.ylab.wordflow.service.readers.impl.FileReaderImpl;
 import io.ylab.wordflow.service.validator.impl.DirectoryValidator;
@@ -15,7 +16,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 @Service
@@ -32,8 +32,13 @@ public class TextAnalyzeServiceImpl implements ITextAnalysis {
     @Autowired
     FileReaderImpl fileReader;
 
+    @Autowired
+    FileProcessor fileProcessor;
+
     @Override
-    public Optional<ResponseDto> analyze(RequestDto requestDto) {
+    public ResponseDto analyze(RequestDto requestDto) {
+        long startTime = System.currentTimeMillis();
+        long executionTime;
         logger.info("Starting directory analysis");
 
         Set<String> stopWords = loadStopWords(requestDto.stopWordsFile());
@@ -41,24 +46,43 @@ public class TextAnalyzeServiceImpl implements ITextAnalysis {
 
         try {
             directoryValidator.validate(requestDto.directory());
-
         } catch (IllegalArgumentException e) {
             logger.error("Directory: {} not valid", requestDto.directory());
-            return Optional.empty();
+            errors.add(new ErrorDto(requestDto.directory(), e.getMessage()));
+            executionTime = System.currentTimeMillis() - startTime;
+            return buildResponse(requestDto, Collections.emptyMap(), errors, 0, executionTime);
         }
 
-        Map<String, Integer> incomingWordCount = getIncomingWordWithCount(requestDto, stopWords, errors);
-        List<Map.Entry<String, Integer>> topWords = aggregateWords(incomingWordCount, requestDto.top());
+        List<Path> validFiles = collectAndValidateFiles(requestDto.directory(), errors);
 
-        List<WordCountDto> words = topWords.stream()
-                .map(entry -> new WordCountDto(entry.getKey(), entry.getValue()))
-                .toList();
+        if (validFiles.isEmpty()){
+            executionTime = System.currentTimeMillis() - startTime;
+            return buildResponse(requestDto, Collections.emptyMap(), errors, 0, executionTime);
+        }
 
-        InfoDto infoDto = new InfoDto(requestDto.directory(), requestDto.minWordLength(), requestDto.top());
+        Map<String, Integer> wordCounts = fileProcessor.processFiles(
+                validFiles,
+                requestDto.minWordLength(),
+                stopWords,
+                errors,
+                requestDto.threads());
 
-        ResponseDto responseDto = new ResponseDto(infoDto, words, errors);
+        executionTime = System.currentTimeMillis() - startTime;
+        return buildResponse(requestDto, wordCounts, errors, validFiles.size(), executionTime);
+    }
 
-        return Optional.of(responseDto);
+    private ResponseDto buildResponse(RequestDto requestDto, Map<String, Integer> wordCounts, List<ErrorDto> errors, int processedFiles, long executionTime) {
+        List<WordCountDto> words = aggregateWords(wordCounts, requestDto.top());
+        InfoDto info = new InfoDto(
+                requestDto.directory(),
+                requestDto.minWordLength(),
+                requestDto.top(),
+                requestDto.mode().name().toLowerCase(),
+                requestDto.threads(),
+                processedFiles,
+                executionTime
+        );
+        return new ResponseDto(info, words, errors);
     }
 
     private Set<String> loadStopWords(String file){
@@ -70,49 +94,7 @@ public class TextAnalyzeServiceImpl implements ITextAnalysis {
         }
     }
 
-    private Map<String, Integer> getIncomingWordWithCount(RequestDto requestDto, Set<String> stopWords, List<ErrorDto> errors){
-        Path dir = Paths.get(requestDto.directory());
-        Map<String, Integer> mapWordCount = new ConcurrentHashMap<>();
-        logger.info("Scan directory: {}", dir);
-
-        try (Stream<Path> pathes = Files.list(dir)){
-            List<Path> files = pathes
-                    .filter(Files::isRegularFile)
-                    .filter(file -> file.toString().endsWith(".txt"))
-                    .filter(file -> {
-                        try{
-                            fileValidator.validate(file.toString());
-                            return true;
-                        } catch (IllegalArgumentException e){
-                            logger.error("File {} not valid: {}", file, e.getMessage());
-                            errors.add(new ErrorDto(file.toString(), e.getMessage()));
-                            return false;
-                        }
-                    })
-                    .toList();
-
-            if (files.isEmpty()){
-                logger.info("Not found files .txt");
-                return mapWordCount;
-            }
-
-            files.parallelStream().forEach(file ->
-                    fileReader.readWords(file.toString())
-                            .stream().filter(
-                                    word -> word.length() >= requestDto.minWordLength()
-                            )
-                            .filter(word -> !stopWords.contains(word))
-                            .forEach(word -> mapWordCount.merge(word, 1, Integer::sum)));
-
-        } catch (IOException e) {
-            logger.error("Fail read dir: {}", requestDto.directory());
-            throw new RuntimeException("Fail read dir: " + requestDto.directory(), e);
-        }
-
-        return mapWordCount;
-    }
-
-    private List<Map.Entry<String, Integer>> aggregateWords(Map<String, Integer> mapWordCount, Integer top){
+    private List<WordCountDto> aggregateWords(Map<String, Integer> mapWordCount, Integer top){
         if (mapWordCount.isEmpty()) {
             logger.info("No words for aggregate");
             return Collections.emptyList();
@@ -120,7 +102,41 @@ public class TextAnalyzeServiceImpl implements ITextAnalysis {
         return mapWordCount.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .limit(top)
+                .map(e -> new WordCountDto(e.getKey(), e.getValue()))
                 .toList();
+    }
+
+    private List<Path> collectFiles(String directory){
+        Path dir = Paths.get(directory);
+        try (Stream<Path> paths = Files.list(dir)) {
+            return paths
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.toString().endsWith(".txt"))
+                    .toList();
+        } catch (IOException e) {
+            logger.error("Failed read directory: {}", directory, e);
+            return List.of();
+        }
+    }
+
+    private List<Path> validateFiles(List<Path> files, List<ErrorDto> errors) {
+        return files.stream()
+                .filter(file -> {
+                    try {
+                        fileValidator.validate(file.toString());
+                        return true;
+                    } catch (IllegalArgumentException e) {
+                        logger.error("File validation failed: {} - {}", file, e.getMessage());
+                        errors.add(new ErrorDto(file.toString(), e.getMessage()));
+                        return false;
+                    }
+                })
+                .toList();
+    }
+
+    private List<Path> collectAndValidateFiles(String directory, List<ErrorDto> errors) {
+        List<Path> allFiles = collectFiles(directory);
+        return validateFiles(allFiles, errors);
     }
 
 }

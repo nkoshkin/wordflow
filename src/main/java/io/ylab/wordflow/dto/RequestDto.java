@@ -1,10 +1,14 @@
 package io.ylab.wordflow.dto;
 
+import io.ylab.wordflow.configuration.ProcessingMode;
+
 public record RequestDto(
         String directory,
         Integer minWordLength,
         Integer top,
         String outputFile,
-        String stopWordsFile
+        String stopWordsFile,
+        ProcessingMode mode,
+        Integer threads
 ) {
 }

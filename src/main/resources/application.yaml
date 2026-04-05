@@ -1,3 +1,7 @@
 spring:
   application:
     name: wordflow
+
+wordflow:
+  mode: single
+  threads: 2
