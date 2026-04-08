@@ -1,5 +1,6 @@
 package io.ylab.wordflow.configuration;
 
+import io.ylab.wordflow.enums.ProcessingMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "wordflow")

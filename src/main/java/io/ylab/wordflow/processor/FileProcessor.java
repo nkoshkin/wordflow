@@ -1,7 +1,8 @@
 package io.ylab.wordflow.processor;
 
 import io.ylab.wordflow.dto.ErrorDto;
-import io.ylab.wordflow.service.readers.Ireader;
+import io.ylab.wordflow.core.readers.Ireader;
+import io.ylab.wordflow.dto.WordCountDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,11 +23,12 @@ public class FileProcessor {
     @Autowired
     Ireader reader;
 
-    public Map<String, Integer> processFiles(List<Path> files,
-                                             Integer minWordLength,
-                                             Set<String> stopWords,
-                                             List<ErrorDto> errors,
-                                             Integer threads) {
+    public List<WordCountDto> processFiles(List<Path> files,
+                                           Integer minWordLength,
+                                           Set<String> stopWords,
+                                           List<ErrorDto> errors,
+                                           Integer threads,
+                                           Integer top) {
         Map<String, Integer> wordCounts = new ConcurrentHashMap<>();
         execute(files, file -> {
             FileProcessResult result = processSingleFile(file, minWordLength, stopWords);
@@ -38,7 +40,11 @@ public class FileProcessor {
                 result.getWordCounts().forEach((k,v) -> wordCounts.merge(k, v, Integer::sum));
             }
         }, threads);
-        return wordCounts;
+        return wordCounts.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .limit(top)
+                .map(e -> new WordCountDto(e.getKey(), e.getValue()))
+                .toList();
     }
 
     private void execute(List<Path> files, Consumer<Path> task, Integer threads){

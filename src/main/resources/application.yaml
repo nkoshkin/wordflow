@@ -1,7 +1,37 @@
 spring:
   application:
     name: wordflow
+  datasource:
+    url: jdbc:h2:mem:wordflow
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 10
+      auto-commit: true
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        connection.autocommit: true
+        connection.isolation: 2
+        format_sql: true
+  h2:
+    console:
+      enabled: true
 
 wordflow:
-  mode: single
+  mode: multi
   threads: 2
+
+app:
+  security:
+    username: admin
+    password: admin123

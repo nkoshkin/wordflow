@@ -1,0 +1,15 @@
+spring:
+  config:
+    activate:
+      on-profile: cli
+  main:
+    web-application-type: none
+  jpa:
+    show-sql: false
+  h2:
+    console:
+      enabled: false
+
+wordflow:
+  mode: multi
+  threads: 2

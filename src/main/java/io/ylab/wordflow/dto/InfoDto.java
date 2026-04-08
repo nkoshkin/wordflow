@@ -2,7 +2,7 @@ package io.ylab.wordflow.dto;
 
 public record InfoDto(
         String directory,
-        Integer minWordLength,
+        Integer minLength,
         Integer top,
         String mode,
         Integer threads,

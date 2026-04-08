@@ -1,0 +1,31 @@
+package io.ylab.wordflow.cli.helper.impl;
+
+import io.ylab.wordflow.cli.helper.IHelper;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+
+@Service
+@Profile("cli")
+public class CliHelperImpl implements IHelper {
+    @Override
+    public void help() {
+        System.out.println("""
+            USAGE:
+              java -jar wordflow.jar --dir=<path> --min-length=<int> --top=<int> [OPTIONS]
+            
+            REQUIRED OPTIONS:
+              --dir=<path>               Path directory with files
+              --min-length=<int>         Min length word
+              --top=<int>                Limit output words
+
+            OPTIONAL OPTIONS:
+              --output=<path>            Path JSON file for results
+              --stopwords=<path>         Path stopwords file
+              --help                     Help message
+            
+            EXAMPLES:
+              java -jar wordflow.jar --dir=./source --min-length=5 --top=10
+              java -jar wordflow.jar --dir=./source --min-length=5 --top=10 --output=./result.json --stopwords=./stopwords.txt
+            """);
+    }
+}
