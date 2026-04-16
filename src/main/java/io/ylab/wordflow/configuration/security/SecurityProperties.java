@@ -1,4 +1,4 @@
-package io.ylab.wordflow.configuration;
+package io.ylab.wordflow.configuration.security;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

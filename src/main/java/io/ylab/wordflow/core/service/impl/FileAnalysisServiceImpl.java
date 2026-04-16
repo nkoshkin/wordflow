@@ -1,13 +1,14 @@
-package io.ylab.wordflow.core.analysis;
+package io.ylab.wordflow.core.service.impl;
 
+import io.ylab.wordflow.core.processor.IFileProcessor;
 import io.ylab.wordflow.core.readers.Ireader;
+import io.ylab.wordflow.core.service.IFileAnalysisService;
 import io.ylab.wordflow.core.validator.impl.DirectoryValidator;
 import io.ylab.wordflow.core.validator.impl.FileValidator;
 import io.ylab.wordflow.dto.AnalysisResult;
 import io.ylab.wordflow.dto.ErrorDto;
 import io.ylab.wordflow.dto.RequestDto;
 import io.ylab.wordflow.dto.WordCountDto;
-import io.ylab.wordflow.processor.FileProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,14 +23,16 @@ import java.util.stream.Stream;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FileAnalysisService {
+public class FileAnalysisServiceImpl implements IFileAnalysisService {
 
-    private final FileProcessor fileProcessor;
+    private final IFileProcessor fileProcessor;
     private final Ireader ireader;
     private final DirectoryValidator directoryValidator;
     private final FileValidator fileValidator;
 
+    @Override
     public AnalysisResult performAnalysis(RequestDto request) {
+        long startTime = System.currentTimeMillis();
 
         try {
             directoryValidator.validate(request.directory());
@@ -37,7 +40,7 @@ public class FileAnalysisService {
             return new AnalysisResult(
                     List.of(),
                     List.of(new ErrorDto(request.directory(), e.getMessage())),
-                    0
+                    0, System.currentTimeMillis() - startTime
             );
         }
 
@@ -54,7 +57,7 @@ public class FileAnalysisService {
                 request.top()
         );
 
-        return new AnalysisResult(wordCounts, errors, allFiles.size());
+        return new AnalysisResult(wordCounts, errors, allFiles.size(), System.currentTimeMillis() - startTime);
     }
 
     private List<Path> collectFiles(String directory){

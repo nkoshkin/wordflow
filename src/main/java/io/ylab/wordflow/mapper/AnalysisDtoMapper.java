@@ -7,7 +7,6 @@ import io.ylab.wordflow.dto.WordCountDto;
 import io.ylab.wordflow.entity.AnalysisEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.stream.Collectors;
 
 @Component
 public class AnalysisDtoMapper {

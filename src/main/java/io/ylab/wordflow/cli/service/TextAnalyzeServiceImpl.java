@@ -1,6 +1,6 @@
 package io.ylab.wordflow.cli.service;
 
-import io.ylab.wordflow.core.analysis.FileAnalysisService;
+import io.ylab.wordflow.core.service.impl.FileAnalysisServiceImpl;
 import io.ylab.wordflow.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,13 +13,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TextAnalyzeServiceImpl implements ITextAnalysis {
 
-    private final FileAnalysisService fileAnalysisService;
+    private final FileAnalysisServiceImpl fileAnalysisServiceImpl;
 
     @Override
     public ResponseDto analyze(RequestDto request) {
         long startTime = System.currentTimeMillis();
 
-        AnalysisResult result = fileAnalysisService.performAnalysis(request);
+        AnalysisResult result = fileAnalysisServiceImpl.performAnalysis(request);
 
         long executionTime = System.currentTimeMillis() - startTime;
 

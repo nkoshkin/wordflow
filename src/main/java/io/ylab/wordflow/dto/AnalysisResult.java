@@ -5,6 +5,7 @@ import java.util.List;
 public record AnalysisResult(
         List<WordCountDto> wordsCount,
         List<ErrorDto> errors,
-        Integer processedFiles
+        Integer processedFiles,
+        Long executionTime
 ) {
 }

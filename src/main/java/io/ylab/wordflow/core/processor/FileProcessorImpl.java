@@ -1,4 +1,4 @@
-package io.ylab.wordflow.processor;
+package io.ylab.wordflow.core.processor;
 
 import io.ylab.wordflow.dto.ErrorDto;
 import io.ylab.wordflow.core.readers.Ireader;
@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 @Component
-public class FileProcessor {
+public class FileProcessorImpl implements IFileProcessor {
 
     @Autowired
     Ireader reader;
