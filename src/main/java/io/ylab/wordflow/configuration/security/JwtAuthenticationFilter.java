@@ -1,5 +1,7 @@
 package io.ylab.wordflow.configuration.security;
 
+import io.ylab.wordflow.service.IJwtService;
+import io.ylab.wordflow.service.impl.JwtServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,13 +17,30 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Фильтр аутентификации по JWT-токену.
+ *
+ * <p>Публичные эндпоинты ({@code /api/auth/login}, {@code /h2-console/**}) пропускаются
+ * без проверки. Для остальных запросов при отсутствии или неверном токене
+ * возвращается статус {@code 401 Unauthorized}.</p>
+ *
+ * @see JwtServiceImpl
+ * @see UserDetailsService
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final IJwtService jwtService;
     private final UserDetailsService userDetailsService;
 
+    /**
+     * Основной метод фильтрации.
+     *
+     * @param request HTTP-запрос
+     * @param response HTTP-ответ
+     * @param chain цепочка фильтров
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,

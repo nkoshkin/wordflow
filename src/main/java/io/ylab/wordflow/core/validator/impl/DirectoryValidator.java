@@ -9,10 +9,29 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Реализация валидатора директории.
+ * Проверяет существование, доступность и тип (директория).
+ */
 @Component
 public class DirectoryValidator implements IValidator<String> {
     private static final Logger logger = LoggerFactory.getLogger(DirectoryValidator.class);
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Проверки:
+     * <ul>
+     *   <li>путь не пустой и не null</li>
+     *   <li>директория существует</li>
+     *   <li>это действительно директория</li>
+     *   <li>доступна для чтения</li>
+     * </ul>
+     * </p>
+     *
+     * @param value путь к директории
+     * @throws IllegalArgumentException если любая проверка не пройдена
+     */
     @Override
     public void validate(String value) {
         if (value == null || value.isBlank()) throw new IllegalArgumentException("Directory is null or empty");

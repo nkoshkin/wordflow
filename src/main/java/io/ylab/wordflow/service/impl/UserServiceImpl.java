@@ -1,34 +1,37 @@
-package io.ylab.wordflow.service;
+package io.ylab.wordflow.service.impl;
 
 import io.ylab.wordflow.entity.User;
 import io.ylab.wordflow.enums.Role;
 import io.ylab.wordflow.repository.UserRepository;
+import io.ylab.wordflow.service.IUserService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Сервис для управления пользователями.
- * Реализует {@link UserDetailsService} для загрузки данных пользователя по имени.
+ * Реализация сервиса для работы с пользователями.
+ * Обеспечивает загрузку пользователя по имени, регистрацию и проверку существования.
+ *
+ * <p>Используется Spring Security для аутентификации.</p>
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserService implements UserDetailsService {
+public class UserServiceImpl implements IUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * Загружает пользователя по имени для аутентификации.
+     * {@inheritDoc}
+     *
+     * <p>Загружает пользователя из базы данных. Если пользователь не найден,
+     * выбрасывает {@link UsernameNotFoundException}.</p>
      *
      * @param username имя пользователя
-     * @return объект {@link UserDetails}, содержащий данные для аутентификации
+     * @return {@link UserDetails} пользователя
      * @throws UsernameNotFoundException если пользователь не найден
      */
     @Override
@@ -38,13 +41,17 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Регистрирует нового пользователя с заданным именем, паролем и ролью.
+     * {@inheritDoc}
+     *
+     * <p>Регистрирует нового пользователя с кодированием пароля.
+     * Если пользователь с таким именем уже существует, выбрасывает {@link RuntimeException}.</p>
      *
      * @param username имя пользователя
-     * @param rawPassword пароль в открытом виде (будет закодирован)
-     * @param role роль пользователя (USER или ADMIN)
-     * @throws RuntimeException если пользователь с таким именем уже существует
+     * @param rawPassword пароль в открытом виде
+     * @param role роль пользователя
+     * @throws RuntimeException если пользователь уже существует
      */
+    @Override
     @Transactional
     public void register(String username, String rawPassword, Role role) {
         if (userRepository.findByUsername(username).isPresent()) {
@@ -53,19 +60,18 @@ public class UserService implements UserDetailsService {
         User user = User.builder()
                 .username(username)
                 .password(passwordEncoder.encode(rawPassword))
-                .role(role)
+                .role(role != null ? role : Role.ROLE_USER)
                 .build();
         userRepository.save(user);
-        log.info("User '{}' registered with role {}", username, role);
     }
 
     /**
-     * Проверяет существование пользователя по имени.
+     * {@inheritDoc}
      *
      * @param username имя пользователя
      * @return true, если пользователь существует
      */
-    @Transactional(readOnly = true)
+    @Override
     public boolean existsByUsername(String username) {
         return userRepository.findByUsername(username).isPresent();
     }

@@ -11,6 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
+/**
+ * Реализация {@link IRequestService} для чтения параметров командной строки.
+ * @see IRequestService
+ * @see IPropertyService
+ */
 @Service
 @Profile("cli")
 public class CliRequestServiceImpl implements IRequestService {
@@ -23,6 +28,12 @@ public class CliRequestServiceImpl implements IRequestService {
     @Autowired
     WordFlowConfiguration config;
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@link RequestDto} с параметрами или {@code null}, если запрошена справка
+     * @throws IllegalArgumentException если отсутствует обязательный параметр
+     */
     @Override
     public RequestDto parse() {
         String dir = propertyService.getRequiredString("dir");

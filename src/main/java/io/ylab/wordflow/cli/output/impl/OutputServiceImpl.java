@@ -1,7 +1,8 @@
-package io.ylab.wordflow.cli.output;
+package io.ylab.wordflow.cli.output.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.ylab.wordflow.cli.output.IOutputService;
 import io.ylab.wordflow.dto.ErrorDto;
 import io.ylab.wordflow.dto.ResponseDto;
 import io.ylab.wordflow.dto.WordCountDto;
@@ -15,14 +16,35 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-
+/**
+ * Реализация {@link IOutputService} для вывода результатов в CLI-режиме.
+ *
+ * <p>Активна только при профиле {@code cli}. Обеспечивает вывод в консоль
+ * и сохранение результата в JSON-файл с использованием Jackson.</p>
+ *
+ * <p>Особенности:
+ * <ul>
+ *   <li>При сохранении в файл автоматически создаются все недостающие родительские директории.</li>
+ *   <li>В случае ошибки записи в файл вывод переключается на консоль.</li>
+ * </ul>
+ * </p>
+ *
+ * @see IOutputService
+ */
 @Service
 @Profile("cli")
-public class OutputService {
-    private static final Logger logger = LoggerFactory.getLogger(OutputService.class);
+public class OutputServiceImpl implements IOutputService {
+    private static final Logger logger = LoggerFactory.getLogger(OutputServiceImpl.class);
 
-
-
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Логирует выбранный способ вывода (консоль или файл).</p>
+     *
+     * @param response   объект {@link ResponseDto} с результатами анализа
+     * @param outputFile путь к файлу для сохранения (может быть {@code null} или пустым)
+     */
+    @Override
     public void returnResponse(ResponseDto response, String outputFile){
         if (outputFile == null || outputFile.isBlank()){
             logger.info("Print result to console");
@@ -34,6 +56,15 @@ public class OutputService {
         }
     }
 
+    /**
+     * Сохраняет результат анализа в JSON-файл.
+     *
+     * <p>Создаёт недостающие директории, использует {@link ObjectMapper} с форматированием
+     * (indent output). В случае ошибки логирует её и перенаправляет вывод в консоль.</p>
+     *
+     * @param response   объект {@link ResponseDto}
+     * @param outputFile путь к выходному файлу (не должен быть {@code null} или пустым)
+     */
     private void outputToFile(ResponseDto response, String outputFile) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -53,6 +84,14 @@ public class OutputService {
 
     }
 
+    /**
+     * Выводит результат анализа в консоль в форматированном виде.
+     *
+     * <p>Выводит режим работы, количество потоков, количество обработанных файлов,
+     * время выполнения, топ-N слов и список ошибок.</p>
+     *
+     * @param response объект {@link ResponseDto}
+     */
     private void outputToConsole(ResponseDto response) {
 
         System.out.printf("\nMode: %s (%d workers)\n", response.infoDto().mode().toUpperCase(), response.infoDto().threads());
@@ -74,7 +113,5 @@ public class OutputService {
             }
         }
         System.out.println("]");
-
-
     }
 }

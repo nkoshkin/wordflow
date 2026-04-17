@@ -11,6 +11,21 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Сущность пользователя, реализующая {@link UserDetails}.
+ * Хранит учётные данные и роль для аутентификации и авторизации.
+ *
+ * <p>Поля:
+ * <ul>
+ *   <li>{@code id} – UUID, первичный ключ (генерируется автоматически)</li>
+ *   <li>{@code username} – уникальное имя пользователя</li>
+ *   <li>{@code password} – зашифрованный пароль</li>
+ *   <li>{@code role} – роль (ROLE_USER или ROLE_ADMIN)</li>
+ * </ul>
+ *
+ * <p>Все методы {@code UserDetails}, кроме {@code getAuthorities()},
+ * возвращают {@code true} (учётные записи не блокируются, не истекают).
+ */
 @Entity
 @Table(name = "users")
 @Getter

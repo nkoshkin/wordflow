@@ -12,6 +12,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+/**
+ * Реализация асинхронного исполнителя анализа текстов.
+ * Запускает анализ и сохраняет результат в БД.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -20,6 +24,16 @@ public class AsyncAnalysisExecutorImpl implements IAsyncAnalysisExecutor {
     private final FileAnalysisServiceImpl fileAnalysisServiceImpl;
     private final IAnalysisService analysisService;
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Метод помечен {@code @Async}, поэтому выполняется в пуле потоков.
+     * Сначала вызывается анализ, затем результат сохраняется в БД.
+     * Ошибки логируются, но не прерывают выполнение других анализов.</p>
+     *
+     * @param analysisId идентификатор анализа
+     * @param request параметры анализа
+     */
     @Override
     @Async
     public void execute(UUID analysisId, RequestDto request) {

@@ -1,10 +1,10 @@
 package io.ylab.wordflow.core.service.impl;
 
 import io.ylab.wordflow.core.processor.IFileProcessor;
-import io.ylab.wordflow.core.readers.Ireader;
+import io.ylab.wordflow.core.readers.IReader;
 import io.ylab.wordflow.core.service.IFileAnalysisService;
 import io.ylab.wordflow.core.validator.impl.DirectoryValidator;
-import io.ylab.wordflow.core.validator.impl.FileValidator;
+import io.ylab.wordflow.core.validator.impl.FileValidatorImpl;
 import io.ylab.wordflow.dto.AnalysisResult;
 import io.ylab.wordflow.dto.ErrorDto;
 import io.ylab.wordflow.dto.RequestDto;
@@ -20,16 +20,35 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
+/**
+ * Реализация сервиса анализа текстов.
+ * Содержит всю бизнес-логику: валидацию, сбор файлов, обработку и формирование результата.
+ *
+ * <p>Класс не зависит от базы данных, поэтому может использоваться как в REST,
+ * так и в CLI-режиме.</p>
+ *
+ * @see IFileAnalysisService
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FileAnalysisServiceImpl implements IFileAnalysisService {
 
     private final IFileProcessor fileProcessor;
-    private final Ireader ireader;
+    private final IReader ireader;
     private final DirectoryValidator directoryValidator;
-    private final FileValidator fileValidator;
+    private final FileValidatorImpl fileValidatorImpl;
 
+    /**
+     * Выполняет полный анализ директории.
+     *
+     * <p>Метод замеряет время выполнения и возвращает объект {@link AnalysisResult},
+     * содержащий топ-слова, ошибки, количество обработанных файлов и время выполнения.</p>
+     *
+     * @param request параметры анализа (не может быть {@code null})
+     * @return результат анализа
+     * @throws IllegalArgumentException если директория не существует или недоступна
+     */
     @Override
     public AnalysisResult performAnalysis(RequestDto request) {
         long startTime = System.currentTimeMillis();
@@ -60,6 +79,12 @@ public class FileAnalysisServiceImpl implements IFileAnalysisService {
         return new AnalysisResult(wordCounts, errors, allFiles.size(), System.currentTimeMillis() - startTime);
     }
 
+    /**
+     * Возвращает список всех файлов .txt в директории.
+     *
+     * @param directory путь к директории
+     * @return список путей к файлам
+     */
     private List<Path> collectFiles(String directory){
         Path dir = Paths.get(directory);
         try (Stream<Path> paths = Files.list(dir)) {
@@ -73,11 +98,18 @@ public class FileAnalysisServiceImpl implements IFileAnalysisService {
         }
     }
 
+    /**
+     * Фильтрует список файлов, оставляя только валидные, и заполняет список ошибок.
+     *
+     * @param files  список файлов для проверки
+     * @param errors список для накопления ошибок
+     * @return список валидных файлов
+     */
     private List<Path> validateFiles(List<Path> files, List<ErrorDto> errors) {
         return files.stream()
                 .filter(file -> {
                     try {
-                        fileValidator.validate(file.toString());
+                        fileValidatorImpl.validate(file.toString());
                         return true;
                     } catch (IllegalArgumentException e) {
                         log.error("File validation failed: {} - {}", file, e.getMessage());
@@ -88,8 +120,14 @@ public class FileAnalysisServiceImpl implements IFileAnalysisService {
                 .toList();
     }
 
+    /**
+     * Загружает стоп-слова из файла (если указан).
+     *
+     * @param file путь к файлу стоп-слов (может быть {@code null})
+     * @return множество стоп-слов (пустое, если файл не указан или не может быть прочитан)
+     */
     private Set<String> loadStopWords(String file){
-        if (file == null || file.isBlank() || !fileValidator.isValid(file)) {
+        if (file == null || file.isBlank() || !fileValidatorImpl.isValid(file)) {
             log.info("Load empty stopwords");
             return Collections.emptySet();
         } else {
@@ -97,6 +135,14 @@ public class FileAnalysisServiceImpl implements IFileAnalysisService {
         }
     }
 
+    /**
+     * Собирает все файлы .txt из директории и возвращает только валидные,
+     * заполняя список ошибок.
+     *
+     * @param directory путь к директории
+     * @param errors    список для накопления ошибок (будет изменён)
+     * @return список валидных файлов {@link Path}
+     */
     private List<Path> collectAndValidateFiles(String directory, List<ErrorDto> errors) {
         List<Path> allFiles = collectFiles(directory);
         return validateFiles(allFiles, errors);
