@@ -126,6 +126,7 @@ public class AnalysisServiceImpl implements IAnalysisService {
                     .collect(Collectors.toList()));
         }
         AnalysisStatus status = getStatusFromresult(result);
+        analysis.setProcessedFiles(result.processedFiles());
         analysis.setStatus(status);
         analysis.setEndTime(LocalDateTime.now());
         analysis.setExecutionTimeMs(result.executionTime());

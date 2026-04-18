@@ -3,7 +3,7 @@ package io.ylab.wordflow.core.service.impl;
 import io.ylab.wordflow.core.processor.IFileProcessor;
 import io.ylab.wordflow.core.readers.IReader;
 import io.ylab.wordflow.core.service.IFileAnalysisService;
-import io.ylab.wordflow.core.validator.impl.DirectoryValidator;
+import io.ylab.wordflow.core.validator.impl.DirectoryValidatorImpl;
 import io.ylab.wordflow.core.validator.impl.FileValidatorImpl;
 import io.ylab.wordflow.dto.AnalysisResult;
 import io.ylab.wordflow.dto.ErrorDto;
@@ -36,7 +36,7 @@ public class FileAnalysisServiceImpl implements IFileAnalysisService {
 
     private final IFileProcessor fileProcessor;
     private final IReader ireader;
-    private final DirectoryValidator directoryValidator;
+    private final DirectoryValidatorImpl directoryValidatorImpl;
     private final FileValidatorImpl fileValidatorImpl;
 
     /**
@@ -54,7 +54,7 @@ public class FileAnalysisServiceImpl implements IFileAnalysisService {
         long startTime = System.currentTimeMillis();
 
         try {
-            directoryValidator.validate(request.directory());
+            directoryValidatorImpl.validate(request.directory());
         } catch (IllegalArgumentException e) {
             return new AnalysisResult(
                     List.of(),

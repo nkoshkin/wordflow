@@ -14,8 +14,8 @@ import java.nio.file.Paths;
  * Проверяет существование, доступность и тип (директория).
  */
 @Component
-public class DirectoryValidator implements IValidator<String> {
-    private static final Logger logger = LoggerFactory.getLogger(DirectoryValidator.class);
+public class DirectoryValidatorImpl implements IValidator<String> {
+    private static final Logger logger = LoggerFactory.getLogger(DirectoryValidatorImpl.class);
 
     /**
      * {@inheritDoc}
