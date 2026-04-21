@@ -1,0 +1,44 @@
+package io.ylab.wordflow.core.validator.impl;
+
+import io.ylab.wordflow.core.validator.IValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+/**
+ * Реализация валидатора директории.
+ * Проверяет существование, доступность и тип (директория).
+ */
+@Component
+public class DirectoryValidatorImpl implements IValidator<String> {
+    private static final Logger logger = LoggerFactory.getLogger(DirectoryValidatorImpl.class);
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Проверки:
+     * <ul>
+     *   <li>путь не пустой и не null</li>
+     *   <li>директория существует</li>
+     *   <li>это действительно директория</li>
+     *   <li>доступна для чтения</li>
+     * </ul>
+     * </p>
+     *
+     * @param value путь к директории
+     * @throws IllegalArgumentException если любая проверка не пройдена
+     */
+    @Override
+    public void validate(String value) {
+        if (value == null || value.isBlank()) throw new IllegalArgumentException("Directory is null or empty");
+        Path path = Paths.get(value);
+        if (!Files.exists(path)) throw new IllegalArgumentException("Directory does not exist: " + value);
+        if (!Files.isDirectory(path)) throw new IllegalArgumentException("Path is not directory: " + value);
+        if (!Files.isReadable(path)) throw new IllegalArgumentException("Directory is not readable: " + value);
+        logger.debug("Directory is valid: {}", value);
+    }
+}

@@ -4,9 +4,32 @@ import io.ylab.wordflow.cli.helper.IHelper;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
+/**
+ * Реализация {@link IHelper} для вывода справки в CLI-режиме.
+ *
+ * <p>Активна только при активном профиле {@code cli}. Выводит справочную информацию
+ * в консоль, используя многострочный текст (text block).</p>
+ *
+ * <p>Справка включает:
+ * <ul>
+ *   <li>формат запуска приложения</li>
+ *   <li>список обязательных параметров</li>
+ *   <li>список опциональных параметров</li>
+ *   <li>примеры использования</li>
+ * </ul>
+ * </p>
+ *
+ * @see IHelper
+ */
 @Service
 @Profile("cli")
 public class CliHelperImpl implements IHelper {
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Выводит справку</p>
+     */
     @Override
     public void help() {
         System.out.println("""

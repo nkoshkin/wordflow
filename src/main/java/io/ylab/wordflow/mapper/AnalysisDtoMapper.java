@@ -7,8 +7,13 @@ import io.ylab.wordflow.dto.WordCountDto;
 import io.ylab.wordflow.entity.AnalysisEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.stream.Collectors;
-
+/**
+ * Маппер для преобразования сущностей в DTO.
+ * Используется в контроллерах для формирования ответов клиенту.
+ * <p>
+ * Преобразует {@link AnalysisEntity} в {@link ResponseDto}
+ * </p>
+ */
 @Component
 public class AnalysisDtoMapper {
 
